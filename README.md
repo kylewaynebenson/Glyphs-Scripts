@@ -1,2 +1,2 @@
-# Glyphs-Scripts
-Scripts for Glyphs.app
+# Glyphs Scripts
+Python scripts I've created for use in Glyphs.app.
