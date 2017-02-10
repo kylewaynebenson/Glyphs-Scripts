@@ -5,7 +5,7 @@ __doc__="""
 Replace each selected glyphs with a drop shadow
 """
 
-import vanilla
+from vanilla import *
 import GlyphsApp
 
 class DropShadow( object ):
@@ -15,7 +15,7 @@ class DropShadow( object ):
 		windowHeight = 180
 		windowWidthResize  = 300 # user can resize width by this value
 		windowHeightResize = 0   # user can resize height by this value
-		self.w = vanilla.FloatingWindow(
+		self.w = vanilla.Window(
 			( windowWidth, windowHeight ), # default window size
 			"Create Drop Shadow", # window title
 			minSize = ( windowWidth, windowHeight ), # minimum size (for resizing)
@@ -26,13 +26,15 @@ class DropShadow( object ):
 		# UI elements:
 		self.w.text_1 = vanilla.TextBox( (15, 10, -15, 30), "Create drop shadow that is this many units removed from original drawing:", sizeStyle='small' )
 
-		self.w.text_2 = vanilla.TextBox( ( 15, 60, 20, 20), "X:", sizeStyle='small' )
-		self.w.xAxis = vanilla.EditText( ( 40, 60-1, 50, 19), "-20", sizeStyle='small' )
-		self.w.text_3 = vanilla.TextBox( (-95, 60, 20, 20), "Y:", sizeStyle='small' )
-		self.w.yAxis = vanilla.EditText( (-20-50, 60-1, -20, 19), "-20", sizeStyle='small' )
+		self.w.text_2 = vanilla.TextBox( ( 15, 60, 20, 20), "X:", sizeStyle='regular' )
+		self.w.xAxis = vanilla.EditText( ( 40, 60-1, 50, 21), "-20", sizeStyle='regular' )
+		self.w.text_3 = vanilla.TextBox( (-95, 60, 20, 20), "Y:", sizeStyle='regular' )
+		self.w.yAxis = vanilla.EditText( (-20-50, 60-1, -20, 21), "-20", sizeStyle='regular' )
 
-		# self.w.text_4 = vanilla.TextBox( (15, 90, 42, 20), "Offset:", sizeStyle='small' )
-		# self.w.offset = vanilla.EditText( (62, 90-1, 50, 19), "0", sizeStyle='small' )
+		self.w.text_4 = vanilla.TextBox( (15, 90, 42, 20), "Offset:", sizeStyle='regular' )
+		self.w.offset = vanilla.EditText( (62, 90-1, 50, 21), "0", sizeStyle='regular' )
+
+		self.w.checkBox = CheckBox((-110, 90, 0, 20), "Keep letters", value=False)
 		
 		
 		# Run Button:
@@ -75,11 +77,11 @@ class DropShadow( object ):
 		selectedLayers = Font.selectedLayers
 		xAxis = float(self.w.xAxis.get())
 		yAxis = float(self.w.yAxis.get())
-		# offsetX = float(self.w.offset.get())
-		# offsetY = float(self.w.offset.get())
+		offsetX = float(self.w.offset.get())
+		offsetY = float(self.w.offset.get())
 		glyphsChanged = []
 		try:
-			# offsetLayer = []
+
 			for thisLayer in selectedLayers:
 
 				glyphsChanged.append( thisLayer.parent.name )
@@ -90,25 +92,27 @@ class DropShadow( object ):
 				thisLayer.correctPathDirection() # for some reason now everything is good
 				addPathList = []
 				negPathList = []
+				keepPathList = []
 				for thisPath in thisLayer.paths:
 					newPath = thisPath.copy()
 					for thisNode in newPath.nodes:
 						thisNode.x += xAxis
 						thisNode.y += yAxis
-					negPathList.append( thisPath )
 					addPathList.append( newPath )
+					keepPathList.append( thisPath )
+				if (offsetX != 0) & (offsetY != 0):
+					self.offsetCurveFilter.offsetLayer_offsetX_offsetY_makeStroke_position_error_shadow_( thisLayer, offsetX, offsetY, False, 0.5, None, None )
+				for thisPath in thisLayer.paths:
+					negPathList.append( thisPath )
 				thisLayer.paths.extend( addPathList )
 				thisLayer.removeOverlap()
-				############
-				# offset doesn't work because you can't use this filter on a python array. Must be a font object
-				############
-				# self.offsetCurveFilter.offsetLayer_offsetX_offsetY_makeStroke_position_error_shadow_( negPathList, offsetX*0.5, offsetY*0.5, True, 0.5, None, None )
 				for thisPath in negPathList:
 					thisPath.reverse()
 				thisLayer.paths.extend( negPathList )
 				thisLayer.removeOverlap()
+				if (self.w.checkBox.get() == True):
+					thisLayer.paths.extend( keepPathList )
 				thisLayer.correctPathDirection()
-
 				thisLayer.parent.endUndo() # wrapper for undo function
 
 			print "Created drop shadow for these glyphs:", glyphsChanged
