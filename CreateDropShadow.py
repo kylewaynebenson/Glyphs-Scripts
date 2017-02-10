@@ -40,13 +40,17 @@ class DropShadow( object ):
 		self.w.makeKey()
 
 	def DropShadowMain( self, sender ):
+	def DropShadowMain( self, sender ):
 		Font = Glyphs.font
 		selectedLayers = Font.selectedLayers
 		xAxis = float(self.w.xAxis.get())
 		yAxis = float(self.w.yAxis.get())
+		shouldBeOdd = False
+		if yAxis < 0:
+			shouldBeOdd = True
 		try:
-			newPathList = []
 			for thisLayer in selectedLayers:
+				newPathList = []
 				for thisPath in thisLayer.paths:
 					newPath = thisPath.copy()
 					for thisNode in newPath.nodes:
@@ -56,13 +60,15 @@ class DropShadow( object ):
 					newPathList.append( newPath )
 				thisLayer.paths.extend( newPathList )
 				thisLayer.removeOverlap()
-				thisLayer.correctPathDirection()
 				counter = 0
 				delList = []
-				for dewPath in thisLayer.paths:
-					print counter
-					if counter % 2 == 0:
-						delList.append( dewPath )
+				for thisPath in thisLayer.paths:
+					if shouldBeOdd:
+						if counter % 2 == 0:
+							delList.append( thisPath )
+					else:
+						if counter % 2 != 0:
+							delList.append( thisPath )
 					counter += 1
 				thisLayer.paths = list(set(thisLayer.paths).difference(set(delList)))
 		except Exception, e:
