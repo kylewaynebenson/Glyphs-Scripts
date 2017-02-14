@@ -5,7 +5,7 @@ __doc__="""
 Replace each selected glyphs with a drop shadow
 """
 
-from vanilla import *
+import vanilla
 import GlyphsApp
 
 class DropShadow( object ):
