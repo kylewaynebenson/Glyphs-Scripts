@@ -33,6 +33,9 @@ class CastShadow( object ):
 
 		self.w.text_4 = vanilla.TextBox( (15, 90, 52, 20), "Stroke:", sizeStyle='regular' )
 		self.w.offset = vanilla.EditText( (68, 90-1, 50, 21), "4", sizeStyle='regular' )
+
+		self.w.text_5 = vanilla.TextBox( (-110, 90, 52, 20), "Gap:", sizeStyle='regular' )
+		self.w.gap = vanilla.EditText( (-70, 90-1, 50, 21), "0", sizeStyle='regular' )
 		
 		
 		# Run Button:
@@ -53,8 +56,7 @@ class CastShadow( object ):
 						thisPath.removeNodeCheckKeepShape_(b)
 
 	def CastShadowMain( self, sender ):
-		pathOp = GSPathOperator.alloc().init() #I think this makes it so you can create layer object arrays
-		pathOp2 = GSPathOperator.alloc().init()
+		pathOp = GSPathOperator.alloc().init()
 		self.offsetCurveFilter = NSClassFromString("GlyphsFilterOffsetCurve")
 		Font = Glyphs.font
 		selectedLayers = Font.selectedLayers
@@ -62,7 +64,8 @@ class CastShadow( object ):
 		yAxis = float(self.w.yAxis.get())
 		offsetX = float(self.w.offset.get())
 		offsetY = float(self.w.offset.get())
-		shadowLen = abs(int(max(yAxis, xAxis)))
+		shadowLen = int(max(abs(yAxis), abs(xAxis)))
+		distance = int(self.w.gap.get())
 		glyphsChanged = []
 		try:
 
@@ -73,36 +76,40 @@ class CastShadow( object ):
 
 				thisLayer.correctPathDirection() # double counter (B and 8) get missed here?
 				thisLayer.correctPathDirection() # single counters (D O) get bad now too
-				thisLayer.correctPathDirection() # for some reason now everything is good
-				addPathList = []
-				negPathList = []
-				keepPathList = []
-				prePathList = []
+
+				addPathList = NSMutableArray.array()
+				prePathList = NSMutableArray.array()
 				
 				#save original outline
 				for thisPath in thisLayer.paths:
 					prePathList.append( thisPath )
 
 				for thisPath in thisLayer.paths:
-					count = 1
+					count = 1 + distance
 					for i in range(shadowLen):
-						newPath = thisPath.copy()
+						newPath = GSPath()
 						#each layer of the cast shadow
-						for thisNode in newPath.nodes:
+						for n in thisPath.nodes:
+							newNode = GSNode()
+							# print "new guy \n"
+							# print thisNode.x, thisNode.y
 							if xAxis < 0:
-								thisNode.x -= count
+								setX = n.x - count
 							if yAxis < 0:
-								thisNode.y -= count
+								setY = n.y - count
 							if xAxis > 0:
-								thisNode.x += count
+								setX = n.x + count
 							if yAxis > 0:
-								thisNode.y += count
+								setY = n.y + count
+							newNode.type = n.type
+							newNode.setPosition_((setX, setY))
+							newPath.addNode_( newNode )
 						#add shadow stack duplicate array
+						newPath.closed = thisPath.closed
 						addPathList.append( newPath )
 						count += 1
 				
-				#make shadow into path
-				pathOp.removeOverlapPaths_error_( addPathList, None)
+				#merge shadow into path
 				for thisPath in addPathList:
 					thisLayer.addPath_( thisPath )
 				
@@ -118,7 +125,7 @@ class CastShadow( object ):
 					thisPath.reverse()
 				
 				#punch out the old drawing
-				pathOp2.removeOverlapPaths_error_( prePathList, None)
+				pathOp.removeOverlapPaths_error_( prePathList, None)
 				for thisPath in prePathList:
 					thisLayer.addPath_( thisPath )
 				
