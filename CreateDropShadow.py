@@ -6,6 +6,7 @@ Replace each selected glyphs with a drop shadow
 """
 
 import vanilla
+from vanilla import *
 import GlyphsApp
 
 class DropShadow( object ):
