@@ -47,13 +47,47 @@ class CastShadow( object ):
 		self.w.makeKey()
 
 	
-	def DeleteStrayPoints( self, thisLayer ):
+	def deleteStrayPoints( self, thisLayer):
 		for i in range(len(thisLayer.paths))[::-1]:
 			thisPath = thisLayer.paths[i]
 			for a, b in zip(thisPath.nodes, thisPath.nodes[1:]):
-				if (a.type == b.type):
-					if (int(a.x) == int(b.x)) & ((abs(int(a.y) - int(b.y)) == 1) | (abs(int(b.y) - int(a.y)) == 1)):
+				if (int(a.x) == int(b.x)) & ((abs(int(a.y) - int(b.y)) == 1) | (abs(int(b.y) - int(a.y)) == 1)):
+					thisPath.removeNodeCheckKeepShape_(b)
+			for a, b in zip(thisPath.nodes, thisPath.nodes[1:]):
+				if (a.type == b.type): 
+					if (int(a.x) == int(b.x)) & (int(a.y) == int(b.y)):
 						thisPath.removeNodeCheckKeepShape_(b)
+	#This section modified from Mekkablue thread https://forum.glyphsapp.com/t/suggestion-reduce-points-command/3490/2
+	def cleanUpPath( self, thisLayer, threshold ):
+		if threshold > 12:
+			threshold = 12
+		for t in range(3):
+			for i in range(len(thisLayer.paths))[::-1]:
+				thisPath = thisLayer.paths[i]
+				pathlength = len(thisPath)
+				for i in range(pathlength)[::-1]:
+					n = thisPath.nodes[i]
+					previousNode = None
+					if i > 0:
+						previousNode = thisPath.nodes[i-1]
+						if previousNode.type == 65 and i > 2:
+							previousNode = thisPath.nodes[i-3]
+
+					nextNode = None
+					if i < pathlength:
+						nextNode = thisPath.nodes[i+1]
+						if nextNode.type == 65 and i < pathlength-2:
+							nextNode = thisPath.nodes[(i+3)%pathlength]
+
+					if nextNode and previousNode:
+						nextDistance = distance(nextNode.position, n.position)
+						previousDistance = distance(previousNode.position, n.position)
+						nextDistanceIsSmall = previousDistance < threshold
+						previousDistanceIsSmall = nextDistance < threshold
+				
+						if (nextDistanceIsSmall and previousDistanceIsSmall):
+							thisPath.removeNodeCheckKeepShape_( n )
+
 
 	def CastShadowMain( self, sender ):
 		pathOp = GSPathOperator.alloc().init()
@@ -112,13 +146,16 @@ class CastShadow( object ):
 				#merge shadow into path
 				for thisPath in addPathList:
 					thisLayer.addPath_( thisPath )
-				
+
 				thisLayer.removeOverlap()
-				self.DeleteStrayPoints( thisLayer )
+				self.deleteStrayPoints( thisLayer )
+				self.cleanUpPath( thisLayer, shadowLen )
 
 				#offset shadow
 				if (offsetX != 0) & (offsetY != 0): #setting stroke thickness
 					self.offsetCurveFilter.offsetLayer_offsetX_offsetY_makeStroke_position_error_shadow_( thisLayer, offsetX, offsetY, False, 0.5, None, None )
+
+				self.deleteStrayPoints( thisLayer )
 
 				#reverse shadow
 				for thisPath in thisLayer.paths:
