@@ -1,7 +1,15 @@
 # Glyphs Scripts
 Python scripts I've created for use in Glyphs.app. I can give no promise that any of these work nor that they won't completely destroy your project so please use them with a good backup on your project.
 
-## Installation
+## About Each Script
+### Change Width Centered
+This is kind of like a multiplexer, only more boring. You plug in a width, and it can adjust the RSB and LSB of all masters of a selected character to get it there. I created this script because Glyphs default behavior is to just add the space to the RSB. But with tabular figures, CJK full width latin characters, or a multiplexed font you'll want to keep the spacing pretty similar to how it previously was.
+### Create Drop Shadow
+There are tools like this available through the Glyphs Plugin Manager. The main difference here is that mine is probably more shitty.
+### Create Cast Shadow
+This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time.
+
+# Installation
 
 Put the scripts into the *Scripts* folder which appears when you choose *Open Scripts Folder* from the *Scripts* menu.
 
