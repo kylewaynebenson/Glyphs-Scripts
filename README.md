@@ -5,7 +5,7 @@ Python scripts I've created for use in Glyphs.app. I can give no promise that an
 ### Change Width Centered
 This is kind of like a multiplexer, only more boring. You plug in a width, and it can adjust the RSB and LSB of all masters of a selected character to get it there. I created this script because Glyphs default behavior is to just add the space to the RSB. But with tabular figures, CJK full width latin characters, or a multiplexed font you'll want to keep the spacing pretty similar to how it previously was.
 ### Create Drop Shadow
-There are tools like this available through the Glyphs Plugin Manager. The main difference here is that mine is probably more shitty.
+There are tools like this available through the Glyphs Plugin Manager. The main difference here is that mine is probably more shitty, and mine has the option to keep the letter, or just leave the shadow—which is handy if you want to create a font file of just shadows.
 ### Create Cast Shadow
 This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time.
 
