@@ -8,6 +8,8 @@ This is kind of like a multiplexer, only more boring. You plug in a width, and i
 There are tools like this available through the Glyphs Plugin Manager. The main difference here is that mine is probably more shitty, and mine has the option to keep the letter, or just leave the shadow—which is handy if you want to create a font file of just shadows.
 ### Create Cast Shadow
 This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time.
+### Create Sign Painter Drop Shadow
+This functions like Create Drop Shadow does, only it tries to blob things out a little bit, like it was painted instead of digitally generated. Definitely finagle with the settings before you give up on it. It requires fine tuning in order to perform.
 
 # Installation
 
