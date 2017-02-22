@@ -1,8 +1,8 @@
-#MenuTitle: Create Sign Painter Drop Shadow
+#MenuTitle: Create Drop Shadow
 #Created by Kyle Wayne Benson
 # -*- coding: utf-8 -*-
 __doc__="""
-Replace each selected glyphs with a sign painter style drop shadow
+Replace each selected glyphs with a drop shadow
 """
 
 import vanilla
@@ -27,7 +27,7 @@ class DropShadow( object ):
 		# UI elements:
 		YOffset = 10
 		
-		self.w.text_1 = vanilla.TextBox( (15, YOffset, -15, 30), "Only use :", sizeStyle='small' )
+		self.w.text_1 = vanilla.TextBox( (15, YOffset, -15, 30), "Create drop shadow that is this many units removed from original drawing:", sizeStyle='small' )
 		
 		LineHeight = 40
 		YOffset += LineHeight
