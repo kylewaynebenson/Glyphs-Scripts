@@ -10,6 +10,8 @@ There are tools like this available through the Glyphs Plugin Manager. The main 
 This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time.
 ### Create Sign Painter Drop Shadow
 This functions like Create Drop Shadow does, only it tries to blob things out a little bit, like it was painted instead of digitally generated. Definitely finagle with the settings before you give up on it. It requires fine tuning in order to perform.
+### Simplify Shape
+This script reduces nodes at a ratio of your choosing. Best when used on grungy, messy, thousand+ node vectors. 
 
 # Installation
 
