@@ -28,7 +28,7 @@ class ChangeWidthCentered( object ):
 
 		self.w.newWidth = vanilla.EditText( ( 15, 40-1, 50, 21), "750", sizeStyle='regular' )
 
-		self.w.checkBox = CheckBox((-120, 40, 0, 20), "All layers", value=False)
+		self.w.checkBox = vanilla.CheckBox((-120, 40, 0, 20), "All layers", value=False)
 		
 		# Run Button:
 		self.w.runButton = vanilla.Button((-130, -20-15, -15, -15), "Change Width", sizeStyle='regular', callback=self.changeWidth )
