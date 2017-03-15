@@ -108,6 +108,7 @@ class CastShadow( object ):
 				glyphsChanged.append( thisLayer.parent.name )
 				thisLayer.parent.beginUndo() # wrapper for undo function
 
+				thisLayer.decomposeComponents() # decompose components
 				thisLayer.correctPathDirection() # double counter (B and 8) get missed here?
 				thisLayer.correctPathDirection() # single counters (D O) get bad now too
 
