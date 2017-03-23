@@ -12,6 +12,8 @@ This creates a shadow as if the letter is a 3d object. You should probably not r
 This functions like Create Drop Shadow does, only it tries to blob things out a little bit, like it was painted instead of digitally generated. Definitely finagle with the settings before you give up on it. It requires fine tuning in order to perform.
 ### Simplify Shape
 This script reduces nodes at a ratio of your choosing. Best when used on grungy, messy, thousand+ node vectors. 
+### Randomly Move Points
+Jumbles the points within a certain specified amount. Lets you choose to only have OCP get jumbled. This is really only useful for making ugly things on purpose.
 
 # Installation
 
