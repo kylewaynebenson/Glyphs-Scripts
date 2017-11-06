@@ -18,11 +18,11 @@ def deleteSmallestPath( thisLayer ):
 
 	numberOfPaths = len(thisLayer.paths)
 	for thisPathNumber in range( numberOfPaths ):
-		if thisPathNumber < (numberOfPaths - 1):
+		if thisPathNumber < numberOfPaths:
 			thisPath = thisLayer.paths[thisPathNumber]
 			if thisPath.area() == min(layerarea):
 				indexesOfPathsToBeRemoved.append( thisPathNumber )
-	
+
 	if indexesOfPathsToBeRemoved:
 		for thatIndex in reversed( sorted( indexesOfPathsToBeRemoved )):
 			thisLayer.removePathAtIndex_( thatIndex )
