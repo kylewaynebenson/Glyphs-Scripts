@@ -1,8 +1,8 @@
-#MenuTitle: Delete Smallest Path
+#MenuTitle: Keep Largest Path
 #Created by Kyle Wayne Benson
 # -*- coding: utf-8 -*-
 __doc__="""
-Finds and deletes the smallest path. I created this for deleting the outline after using my cast shadow script so I could have a fill shape.
+deletes everything except for the largest path
 """
 
 import GlyphsApp
@@ -10,7 +10,7 @@ thisFont = Glyphs.font # frontmost font
 thisFontMaster = thisFont.selectedFontMaster # active master
 listOfSelectedLayers = thisFont.selectedLayers # active layers of selected glyphs
 
-def deleteSmallestPath( thisLayer ):
+def keepLargestPath( thisLayer ):
 	indexesOfPathsToBeRemoved = []
 	layerarea = []
 	for thisPath in thisLayer.paths:
@@ -20,19 +20,16 @@ def deleteSmallestPath( thisLayer ):
 	for thisPathNumber in range( numberOfPaths ):
 		if thisPathNumber < numberOfPaths:
 			thisPath = thisLayer.paths[thisPathNumber]
-			if thisPath.area() == min(layerarea):
+			if thisPath.area() != max(layerarea):
 				indexesOfPathsToBeRemoved.append( thisPathNumber )
 
 	if indexesOfPathsToBeRemoved:
 		for thatIndex in reversed( sorted( indexesOfPathsToBeRemoved )):
 			thisLayer.removePathAtIndex_( thatIndex )
 
-thisFont.disableUpdateInterface() # suppresses UI updates in Font View
 
 for thisLayer in listOfSelectedLayers:
 	thisGlyph = thisLayer.parent
 	thisGlyph.beginUndo() # begin undo grouping
-	deleteSmallestPath( thisLayer )
+	keepLargestPath( thisLayer )
 	thisGlyph.endUndo()   # end undo grouping
-
-thisFont.enableUpdateInterface() # re-enables UI updates in Font View
