@@ -26,10 +26,20 @@ for thisLayer in selectedLayers:
 	thisGlyph = thisLayer.parent
 	try:
 		thisGlyph.beginUndo()
-		guideName = "spacing." + thisGlyph.name.rsplit('.', 2)[1]
-		if glyphExists(guideName):
-			thisGlyph.leftMetricsKey = guideName
-			thisGlyph.rightMetricsKey = guideName
+		extension = thisGlyph.name.rsplit('.', 2)[1]
+		leftGuideName = "_space." + extension[:3]
+		rightGuideName = "_space." + extension[-3:]
+		print rightGuideName
+		print leftGuideName
+		if (leftGuideName != thisGlyph.name or rightGuideName != thisGlyph.name):
+			if glyphExists(leftGuideName):
+				thisGlyph.color = 7 # change color dark blue
+				thisGlyph.leftMetricsKey = leftGuideName
+			if glyphExists(rightGuideName):
+				thisGlyph.color = 8 # change color purple
+				thisGlyph.rightMetricsKey = rightGuideName
+			if (glyphExists(leftGuideName) & glyphExists(rightGuideName)):
+				thisGlyph.color = 9 # change color magenta
 		thisGlyph.endUndo()
 	except:
 		print "!\t" + thisGlyph.name + "\t is not a special character and has not been changed"
