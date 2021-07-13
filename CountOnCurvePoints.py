@@ -2,9 +2,9 @@
 #Created by Kyle Wayne Benson
 # -*- coding: utf-8 -*-
 __doc__="""
-Count and compare on curve points between masters
+Count and compare on curve points between layers
 """
-
+import vanilla.dialogs as vd
 import GlyphsApp
 
 def countMyNodes( thisLayer):
@@ -15,22 +15,23 @@ def countMyNodes( thisLayer):
 				nodeTotal += 1
 	return nodeTotal
 
-
-font = Glyphs.font
-# get active layer
-layer = font.selectedLayers[0]
-# get glyph of this layer
-glyph = layer.parent
-
-# access all layers of this glyph
-
-
 try:
+	font = Glyphs.font
+	# get active layer
+	layer = font.selectedLayers[0]
+	# get glyph of this layer
+	glyph = layer.parent
+	
+	# access all layers of this glyph
+	
 	Glyphs.showMacroWindow()
+	message_text = "Oncurve points\n\n"
 	for layer in glyph.layers:
-	        print layer.name, ": ", countMyNodes( layer)
+		print(layer.name, ": ", countMyNodes( layer))
+		message_text += layer.name + ": " + str(countMyNodes(layer)) + "\n"
+	vd.message(message_text)
 
-except Exception, e:
+except Exception as e:
 	# print error
 	Glyphs.showMacroWindow()
-	print "CountOnCurvePoints Error: %s" % e
+	print("CountOnCurvePoints Error: %s" % e)
