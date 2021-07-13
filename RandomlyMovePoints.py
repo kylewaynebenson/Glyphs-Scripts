@@ -78,9 +78,9 @@ class RandomlyMove( object ):
 						
 					thisPath.checkConnections()
 				thisLayer.parent.endUndo()
-		except Exception, e:
+		except Exception as e:
 			# print error
 			Glyphs.showMacroWindow()
-			print "Move Points Error: %s" % e
+			print("Move Points Error: %s" % e)
 
 RandomlyMove()

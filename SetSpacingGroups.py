@@ -35,7 +35,7 @@ for thisLayer in selectedLayers:
 					thisGlyph.color = 7 # change color dark blue
 					thisGlyph.leftMetricsKey = leftGuideName
 		else:
-			print "!\t" + thisGlyph.name + "\t has _space formula LSB"
+			print( "!\t" + thisGlyph.name + "\t has _space formula LSB")
 		if "=_space." not in str(thisGlyph.rightMetricsKey):
 			if (rightGuideName != thisGlyph.name):				
 				if glyphExists(rightGuideName):
@@ -44,7 +44,7 @@ for thisLayer in selectedLayers:
 				if (glyphExists(leftGuideName) & glyphExists(rightGuideName)):
 					thisGlyph.color = 9 # change color magenta
 		else:
-			print "!\t" + thisGlyph.name + "\t has _space formula RSB"
+			print( "!\t" + thisGlyph.name + "\t has _space formula RSB")
 		thisGlyph.endUndo()
 	except:
-		print "!\t" + thisGlyph.name + "\t is not special"
+		print( "!\t" + thisGlyph.name + "\t is not special")

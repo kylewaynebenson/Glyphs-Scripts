@@ -80,19 +80,18 @@ class SimplifyShape( object ):
 
 				thisLayer.parent.beginUndo() # wrapper for undo function
 
-				print thisLayer.name
-				print "On curve node count:", self.countMyNodes( thisLayer)
+				print(thisLayer.name)
+				print("On curve node count:", self.countMyNodes( thisLayer))
 				
 				self.deletePoints( thisLayer, nodeCount )
 				self.deleteOverlappingPoints( thisLayer )
 				
-				print "New on curve node count:", self.countMyNodes( thisLayer)
+				print("New on curve node count:", self.countMyNodes( thisLayer))
 
 				thisLayer.parent.endUndo() # wrapper for undo function
 
-		except Exception, e:
-			# print error
+		except Exception as e:
 			Glyphs.showMacroWindow()
-			print "Simplify Shape Error: %s" % e
+			print("Simplify Shape Error: %s" % e)
 
 SimplifyShape()
