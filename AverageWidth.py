@@ -14,9 +14,15 @@ def averageWidth():
 	try:
 		averageWidth = 0
 		count = 0
+		alreadyCheckedGlyphs = []
 		msg_txt = ""
 		for layer in Glyphs.font.selectedLayers:
 			thisGlyph = layer.parent
+			
+			if thisGlyph.name is None: continue
+			if thisGlyph.name == "None": continue
+			if thisGlyph.name in alreadyCheckedGlyphs: continue # this will omitt glyphs.width that was already checked
+			
 			averageWidth += layer.width
 			count += 1
 			print("\t", thisGlyph.name)
