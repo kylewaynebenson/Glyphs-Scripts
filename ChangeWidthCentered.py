@@ -68,7 +68,7 @@ class ChangeWidthCentered( object ):
 					print("\t", "\t", "New Width =>", layer.width)
 				if count == allLayers:
 					thisGlyph.color = 6
-		except Exception, e:
+		except Exception as e:
 			# print error
 			Glyphs.showMacroWindow()
 			print("Change Width Centered Error: %s" % e)
