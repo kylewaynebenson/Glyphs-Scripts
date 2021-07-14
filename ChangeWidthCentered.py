@@ -46,7 +46,7 @@ class ChangeWidthCentered( object ):
 		try:
 			for layer in Glyphs.font.selectedLayers:
 				thisGlyph = layer.parent
-				print("\n", thisGlyph.name)
+				print("\n" + thisGlyph.name)
 				allLayers = len(thisGlyph.layers)
 				count = 0
 				if AllLayers == True:
@@ -60,7 +60,7 @@ class ChangeWidthCentered( object ):
 						print("\t\tNew Width => %s" % thisLayer.width)
 				else:
 					AddToSides = (NewWidth - layer.width) / 2
-					print("\t", layer.name)
+					print("\t%s" % layer.name)
 					print("\t\tCurrent Width => %s" % layer.width)
 					print("\t\tAdded to Sides => %s" % AddToSides)
 					layer.LSB = layer.LSB + AddToSides
