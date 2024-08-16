@@ -2,6 +2,8 @@
 Python scripts I've created for use in Glyphs.app. I can give no promise that any of these work nor that they won't completely destroy your project so please use them with a good backup on your project.
 
 ## About Each Script
+### Add Corner Component
+Adds a selected corner component to the selected node(s) with the option to apply on all compatible masters (if masters are compatible). If multiple nodes are selected, it first applies the "sharpen corner" function.
 ### Change Width Centered
 This is kind of like a multiplexer, only more boring. You plug in a width, and it can adjust the RSB and LSB of all masters of a selected character to get it to that width. I created this script because Glyphs default behavior is to just add the space to the RSB. But with tabular figures, CJK full width latin characters, or a multiplexed font you'll want to keep the spacing pretty similar to how it previously was.
 ### Average Width
@@ -12,10 +14,14 @@ There are tools like this available through the Glyphs Plugin Manager. The main 
 This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time.
 ### Create Sign Painter Drop Shadow
 This functions like Create Drop Shadow does, only it tries to blob things out a little bit, like it was painted instead of digitally generated. Definitely finagle with the settings before you give up on it. It requires fine tuning in order to perform.
+### Mirror Components Across Masters
+Mirrors the components of the active layer to all other masters, updating any discrepancies.
 ### Simplify Shape
 This script reduces nodes at a ratio of your choosing. Best when used on grungy, messy, thousand+ node vectors.
 ### Randomly Move Points
 Jumbles the points within a certain specified amount. Lets you choose to only have OCP get jumbled. This is really only useful for making ugly things on purpose.
+### Reset All Components
+Resets the scale of all components in the selected glyph to 100% with options for all masters and automatic alignment.
 ### Delete Largest Path/Keep Largest Path/Delete Smallest Path
 I made these to delete some of the accidental shapes that were left after running Create Cast Shadow or other path manipulating scripts.
 ### Count on Curve Points
