@@ -16,6 +16,7 @@ Options for automatic alignment, applying on all masters, and searching through 
 | Interpolation    | Count on Curve Points           | This counts all on curve points for each master or layer of a selected glyph. Made to help figure out interpolation issues on complex drawings. |
 | Metrics    | Average Width                   | Adds up and averages the width of all the masters/layers for a selected glyph. I made it to help me figure out a good starting point width for tabular figures. |
 | Metrics          | Change Width Centered | Kind of like a multiplexer, but more boring. Uniformly changes width, but keeps character centered. |
+| Metrics           | Find Metrics          | Find metrics with specific characteristics and open in tab |
 | Metrics          | Set Spacing Groups | Set Spacing Groups to spacing.extension if .extension is added |
 | Paths           | Create Cast Shadow              | This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time. |
 | Paths           | Create Drop Shadow              | Specify the size and direction of your drop shadow, with option to keep the letter, or just leave the shadow (handy if you want to create a font file of just shadows). |
