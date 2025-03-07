@@ -1,34 +1,39 @@
 # Glyphs Scripts
-Python scripts I've created for use in Glyphs.app. I can give no promise that any of these work nor that they won't completely destroy your project so please use them with a good backup on your project.
+Python scripts for use in Glyphs.app.
 
-## About Each Script
-### Add Corner Component
-Adds a selected corner component to the selected node(s) with the option to apply on all compatible masters (if masters are compatible). If multiple nodes are selected, it first applies the "sharpen corner" function.
-### Change Width Centered
-This is kind of like a multiplexer, only more boring. You plug in a width, and it can adjust the RSB and LSB of all masters of a selected character to get it to that width. I created this script because Glyphs default behavior is to just add the space to the RSB. But with tabular figures, CJK full width latin characters, or a multiplexed font you'll want to keep the spacing pretty similar to how it previously was.
-### Average Width
-Adds up and averages the width of all the masters/layers for a selected glyph. I made it to help me figure out a good starting point width for tabular figures.
-### Create Drop Shadow
-There are tools like this available through the Glyphs Plugin Manager. The main difference here is that mine is probably more shitty, and mine has the option to keep the letter, or just leave the shadow—which is handy if you want to create a font file of just shadows.
-### Create Cast Shadow
-This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time.
-### Create Sign Painter Drop Shadow
-This functions like Create Drop Shadow does, only it tries to blob things out a little bit, like it was painted instead of digitally generated. Definitely finagle with the settings before you give up on it. It requires fine tuning in order to perform.
-### Mirror Components Across Masters
-Mirrors the components of the active layer to all other masters, updating any discrepancies.
-### Simplify Shape
-This script reduces nodes at a ratio of your choosing. Best when used on grungy, messy, thousand+ node vectors.
-### Randomly Move Points
-Jumbles the points within a certain specified amount. Lets you choose to only have OCP get jumbled. This is really only useful for making ugly things on purpose.
-### Reset All Components
-Resets the scale of all components in the selected glyph to 100% with options for all masters and automatic alignment.
-### Delete Largest Path/Keep Largest Path/Delete Smallest Path
-I made these to delete some of the accidental shapes that were left after running Create Cast Shadow or other path manipulating scripts.
-### Count on Curve Points
-This counts all on curve points for each master or layer of a selected glyph. Made to help figure out interpolation issues on complex drawings.
+## About Scripts
+## Scripts
+| Folder           | Script Name                     | Description |
+|------------------|---------------------------------|-------------|
+| Components       | Add Corner Component            | Adds a selected corner component to the selected node(s) with the option to apply on all compatible masters (if masters are compatible). If multiple nodes are selected, it first applies the "sharpen corner" function. |
+| Components       | Add Or Replace Components         | Replaces selected path or component with a new component in Glyphs 3.
+Options for automatic alignment, applying on all masters, and searching through all available glyphs. |
+| Components       | Mirror Components Across Masters| Mirrors the components of the active layer to all other masters, updating any discrepancies. |
+| Components       | Reset All Components            | Resets the scale of all components in the selected glyph to 100% with options for all masters and automatic alignment. |
+| Components        | Reverse Component Path Direction | Reverses the path direction of a selected component. |
+| Guides           | Local Guidelines                | Adds guidelines accross font based on guides found in various guide.extension glyphs |
+| Interpolation    | Make Node First                   | Created this script so that I could assign a keyboard shortcut to this right-click function |
+| Interpolation    | Count on Curve Points           | This counts all on curve points for each master or layer of a selected glyph. Made to help figure out interpolation issues on complex drawings. |
+| Metrics    | Average Width                   | Adds up and averages the width of all the masters/layers for a selected glyph. I made it to help me figure out a good starting point width for tabular figures. |
+| Metrics          | Change Width Centered | Kind of like a multiplexer, but more boring. Uniformly changes width, but keeps character centered. |
+| Metrics          | Set Spacing Groups | Set Spacing Groups to spacing.extension if .extension is added |
+| Paths           | Create Cast Shadow              | This creates a shadow as if the letter is a 3d object. You should probably not run this on more than 50 characters, as the process takes a little time. |
+| Paths           | Create Drop Shadow              | Specify the size and direction of your drop shadow, with option to keep the letter, or just leave the shadow (handy if you want to create a font file of just shadows). |
+| Paths           | Create Sign Painter Drop Shadow | This functions like Create Drop Shadow does, only it tries to blob things out a little bit, like it was painted instead of digitally generated. Definitely finagle with the settings before you give up on it. It requires fine tuning. |
+| Paths             | Delete All Paths | Deletes all paths in selected glyphs. |
+| Paths           | Delete Largest Path             | Deletes the largest path in the selected glyph. |
+| Paths           | Keep Largest Path               | Keeps only the largest path in the selected glyph, deleting the rest. |
+| Paths           | Delete Smallest Path            | Deletes the smallest path in the selected glyph. |
+| Paths         | Keep Largest Path | Deletes all paths in selected glyphs except for the largest path. |
+| Paths           | Randomly Move Points            | Jumbles the points within a certain specified amount. Lets you choose to only have OCP get jumbled. This is really only useful for making ugly things on purpose. |
+| Paths           | Simplify Shape                  | This script reduces nodes at a ratio of your choosing. Best when used on grungy, messy, thousand+ node vectors. |
 
-# Installation
 
+# Usage
+
+Go to Glyphs.app: `window` > `Plugin Manager` > `Scripts`, then search for Kyle Wayne Benson.
+
+# Other installation
 Put the scripts into the *Scripts* folder which appears when you choose *Open Scripts Folder* from the *Scripts* menu.
 
 For some scripts, you will also need to install Tal Leming's *Vanilla*. Here's how.

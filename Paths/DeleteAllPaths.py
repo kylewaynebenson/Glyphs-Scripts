@@ -1,4 +1,5 @@
 #MenuTitle: Delete All Paths
+#Description: Deletes all paths in selected glyphs.
 #Created by Kyle Wayne Benson
 # -*- coding: utf-8 -*-
 __doc__="""

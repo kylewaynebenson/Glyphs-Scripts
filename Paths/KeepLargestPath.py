@@ -1,5 +1,6 @@
 #MenuTitle: Keep Largest Path
 #Created by Kyle Wayne Benson
+#Description: Deletes all paths in selected glyphs except for the largest path.
 # -*- coding: utf-8 -*-
 __doc__="""
 deletes everything except for the largest path
