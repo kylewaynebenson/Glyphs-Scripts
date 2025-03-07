@@ -2,12 +2,10 @@
 Python scripts for use in Glyphs.app.
 
 ## About Scripts
-## Scripts
 | Folder           | Script Name                     | Description |
 |------------------|---------------------------------|-------------|
 | Components       | Add Corner Component            | Adds a selected corner component to the selected node(s) with the option to apply on all compatible masters (if masters are compatible). If multiple nodes are selected, it first applies the "sharpen corner" function. |
-| Components       | Add Or Replace Components         | Replaces selected path or component with a new component in Glyphs 3.
-Options for automatic alignment, applying on all masters, and searching through all available glyphs. |
+| Components       | Add Or Replace Components         | Replaces selected path or component with a new component in Glyphs 3. Options for automatic alignment, applying on all masters, and searching through all available glyphs. |
 | Components       | Mirror Components Across Masters| Mirrors the components of the active layer to all other masters, updating any discrepancies. |
 | Components       | Reset All Components            | Resets the scale of all components in the selected glyph to 100% with options for all masters and automatic alignment. |
 | Components        | Reverse Component Path Direction | Reverses the path direction of a selected component. |
