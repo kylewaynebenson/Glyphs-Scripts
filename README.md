@@ -4,6 +4,7 @@ Python scripts for use in Glyphs.app.
 ## About Scripts
 | Folder           | Script Name                     | Description |
 |------------------|---------------------------------|-------------|
+| Anchors          | Mirror Anchors Across Masters     | Takes a selected anchor and places it in corresponding positions across all masters based on positioning relative to zones and sides. |
 | Components       | Add Corner Component            | Adds a selected corner component to the selected node(s) with the option to apply on all compatible masters (if masters are compatible). If multiple nodes are selected, it first applies the "sharpen corner" function. |
 | Components       | Add Or Replace Components         | Replaces selected path or component with a new component in Glyphs 3. Options for automatic alignment, applying on all masters, and searching through all available glyphs. |
 | Components       | Mirror Components Across Masters| Mirrors the components of the active layer to all other masters, updating any discrepancies. |
