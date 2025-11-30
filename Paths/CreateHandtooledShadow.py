@@ -119,6 +119,8 @@ class HandtoolEffect(object):
 
                     # Store cleaned paths
                     cleanPaths = [p.copy() for p in baseLayer.paths]
+                    # count
+                    numShapes = len(cleanPaths)
 
                     # 2) Create inset version for the shadow source
                     insetLayer = GSLayer()
@@ -127,35 +129,53 @@ class HandtoolEffect(object):
                     
                     insetLayer.removeOverlap()
                     insetLayer.correctPathDirection()
+                    # double to shrink inward
+                    borderSizeDouble = borderSize * 2
 
                     # Apply offset filter using the class method
                     offsetFilterClass.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_metrics_error_shadow_capStyleStart_capStyleEnd_keepCompatibleOutlines_(
                         insetLayer,
-                        -borderSize, -borderSize,  # NEGATIVE to shrink inward
-                        False,  # makeStroke
+                        borderSizeDouble, borderSizeDouble,
+                        True,  # makeStroke
                         False,  # autoStroke
-                        1.0,  # position
+                        0.5,  # position
                         None,  # metrics
                         None,  # error
                         None,  # shadow
                         0,  # capStyleStart
                         0,  # capStyleEnd
-                        True  # keepCompatibleOutlines
+                        False  # keepCompatibleOutlines
                     )
                     
                     insetPaths = [p.copy() for p in insetLayer.paths]
                     
-                    # 3) Create inner shadow by shifting the INSET shape
-                    shadowLayer = GSLayer()
+                    # Delete offset shapes
+                    if len(insetPaths) > numShapes:
+                        # Sort paths by area
+                        pathAreas = [(p, abs(p.area())) for p in insetPaths]
+                        pathAreas.sort(key=lambda x: x[1], reverse=False)
+                        # The offset paths are the largest 'numShapes' areas
+                        pathsToKeep = [p[0] for p in pathAreas[:numShapes]]
+                        insetPaths = pathsToKeep
+
+                    # Remove overlaps using a temporary layer
+                    tempLayer = GSLayer()
                     for p in insetPaths:
+                        tempLayer.paths.append(p.copy())
+                    tempLayer.removeOverlap()
+                    tempLayer.correctPathDirection()
+                    insetPaths = [p.copy() for p in tempLayer.paths]
+
+                    # 3) Create inner shadow by shifting the original shape
+                    shadowLayer = GSLayer()
+                    for p in cleanPaths:
                         shadowPath = p.copy()
                         for node in shadowPath.nodes:
                             node.position = (node.position.x + shadowX, node.position.y + shadowY)
                         shadowLayer.paths.append(shadowPath)
 
-                    # 4) Crop shadow to only the part OUTSIDE the original shape
+                    # 4) Crop shadow to the part offset shape
                     # Use the "big rectangle" method for clean boolean operations
-                    
                     # Get bounds of all paths to create a big rectangle
                     margin = 400
                     allNodes = []
@@ -186,7 +206,7 @@ class HandtoolEffect(object):
                         # Create mask layer: big rect + reversed original (original becomes a hole)
                         maskLayer = GSLayer()
                         maskLayer.paths.append(bigRect)
-                        for p in cleanPaths:
+                        for p in insetPaths:
                             holePath = p.copy()
                             holePath.reverse()
                             maskLayer.paths.append(holePath)
@@ -207,12 +227,14 @@ class HandtoolEffect(object):
                         # Union then subtract to get intersection
                         visibleShadowLayer.removeOverlap()
                         
+
                         # Now subtract the mask (reversed) to keep only shadow part
                         for p in maskLayer.paths:
                             cutPath = p.copy()
                             cutPath.reverse()
                             visibleShadowLayer.paths.append(cutPath)
-                            visibleShadowLayer.removeOverlap()
+                        
+                        visibleShadowLayer.removeOverlap()
                         
                         innerShadowPaths = [p.copy() for p in visibleShadowLayer.paths]
                     else:
@@ -220,8 +242,7 @@ class HandtoolEffect(object):
 
                     # 5) Build final layer: original outline + visible shadow
                     finalLayer = GSLayer()
-
-                    # Add the cropped inner shadow
+                    # Add inner shadow paths
                     for p in innerShadowPaths:
                         finalLayer.paths.append(p.copy())
 
@@ -229,9 +250,10 @@ class HandtoolEffect(object):
                     for p in cleanPaths:
                         finalLayer.paths.append(p.copy())
 
-                    # Final cleanup (no removeOverlap to keep shadow and outline separate)
                     finalLayer.correctPathDirection()
-                    
+                    finalLayer.removeOverlap()
+                    finalLayer.correctPathDirection()
+
                     # Copy attributes and replace layer
                     finalLayer.layerId = srcLayer.layerId
                     finalLayer.associatedMasterId = srcLayer.associatedMasterId
