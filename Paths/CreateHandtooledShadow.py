@@ -1,8 +1,8 @@
-#MenuTitle: Create Handtool
+#MenuTitle: Create Handtooled
 #Created by Kyle Wayne Benson
 # -*- coding: utf-8 -*-
 __doc__="""
-Create a handtool effect (inner shadow + border) for selected glyphs
+Create a handtooled effect (inner shadow + border) for selected glyphs
 """
 
 import vanilla
@@ -76,8 +76,8 @@ class HandtoolEffect(object):
     
     def applyOffsetToPaths(self, paths, offsetValue):
         """Apply offset to paths and return new paths"""
-        import objc
-        OffsetCurveFilter = objc.lookUpClass("GlyphsFilterOffsetCurve")
+        from Foundation import NSClassFromString
+        OffsetCurveFilter = NSClassFromString("GlyphsFilterOffsetCurve")
         
         newPaths = []
         for path in paths:
@@ -97,6 +97,17 @@ class HandtoolEffect(object):
                     newPaths.append(newPath)
         
         return newPaths
+    
+    def removeSmallPaths(self, paths, areaThreshold):
+        """Remove paths with area below threshold"""
+        filteredPaths = []
+        for path in paths:
+            pathArea = abs(path.area())
+            if pathArea >= areaThreshold:
+                filteredPaths.append(path)
+            else:
+                print("  Removing small artifact path with area: %f" % pathArea)
+        return filteredPaths
 
     def HandtoolMain(self, sender):
         try:
@@ -115,6 +126,11 @@ class HandtoolEffect(object):
             except ValueError:
                 Glyphs.showNotification("Handtool Effect", "Invalid numeric values")
                 return
+            
+            # Calculate area threshold based on thinnestPart
+            # Using square of thinnestPart as guide for threshold
+            areaThreshold = (thinnestPart * thinnestPart) * 4
+            print("Using area threshold: %f" % areaThreshold)
             
             allMasters = self.w.allMasters.get()
             
@@ -138,11 +154,38 @@ class HandtoolEffect(object):
                 for master in masters:
                     srcLayer = glyph.layers[master.id]
 
-                    if len(srcLayer.paths) == 0:
+                    if len(srcLayer.paths) == 0 and len(srcLayer.components) == 0:
                         continue
 
-                    # 1) Start with cleaned outline
+                    # 1) Start with cleaned outline - decompose everything including corner components
                     baseLayer = srcLayer.copy()
+                    
+                    # Method 1: Try decomposeCorners (Glyphs 3.2+)
+                    if hasattr(baseLayer, 'decomposeCorners'):
+                        try:
+                            baseLayer.decomposeCorners()
+                        except:
+                            pass
+                    
+                    # Method 2: Decompose regular components
+                    if baseLayer.components:
+                        try:
+                            baseLayer.decomposeComponents()
+                        except:
+                            pass
+                    
+                    # Method 3: Use flattenOutlines if available - this handles all special components
+                    if hasattr(baseLayer, 'flattenOutlines'):
+                        try:
+                            baseLayer.flattenOutlines()
+                        except:
+                            pass
+                    
+                    # If still no paths, skip this glyph
+                    if len(baseLayer.paths) == 0:
+                        print(f"Warning: {glyph.name} has no paths after decomposition, skipping")
+                        continue
+                    
                     baseLayer.removeOverlap()
                     baseLayer.correctPathDirection()
 
@@ -153,9 +196,9 @@ class HandtoolEffect(object):
                     # First, smooth out thin parts using thinnestPart value
                     print("Smoothing thin parts for inset: offset in by %f, then out by %f" % (thinnestPart, thinnestPart))
                     
-                    thinnestPart = thinnestPart / 2.0
+                    thinnestPartHalf = thinnestPart / 2.0
                     # Start with clean paths for smoothing
-                    smoothPaths = self.applyOffsetToPaths(cleanPaths, -thinnestPart)
+                    smoothPaths = self.applyOffsetToPaths(cleanPaths, -thinnestPartHalf)
                     
                     # Create temp layer for cleanup
                     tempLayer = GSLayer()
@@ -165,8 +208,12 @@ class HandtoolEffect(object):
                     tempLayer.correctPathDirection()
                     smoothPaths = [p.copy() for p in tempLayer.paths]
                     
+                    # Clean up small artifacts after first offset
+                    print("Cleaning artifacts after inward offset")
+                    smoothPaths = self.removeSmallPaths(smoothPaths, areaThreshold)
+                    
                     # Then offset outward by thinnestPart to restore size
-                    smoothPaths = self.applyOffsetToPaths(smoothPaths, thinnestPart)
+                    smoothPaths = self.applyOffsetToPaths(smoothPaths, thinnestPartHalf)
                     
                     # Create temp layer for final cleanup
                     tempLayer2 = GSLayer()
@@ -175,6 +222,10 @@ class HandtoolEffect(object):
                     tempLayer2.removeOverlap()
                     tempLayer2.correctPathDirection()
                     smoothedPaths = [p.copy() for p in tempLayer2.paths]
+                    
+                    # Clean up small artifacts after second offset
+                    print("Cleaning artifacts after outward offset")
+                    smoothedPaths = self.removeSmallPaths(smoothedPaths, areaThreshold)
                     
                     # Now apply the actual border inset to the smoothed paths
                     insetLayer = GSLayer()
@@ -191,8 +242,11 @@ class HandtoolEffect(object):
                     
                     insetLayer.removeOverlap()
                     insetLayer.correctPathDirection()
-                    # Update insetPaths with the final cleaned paths
                     insetPaths = [p.copy() for p in insetLayer.paths]
+                    
+                    # Clean up small artifacts from final inset
+                    print("Cleaning artifacts after final inset")
+                    insetPaths = self.removeSmallPaths(insetPaths, areaThreshold)
 
                     # 3) Create inner shadow by shifting the original shape
                     shadowLayer = GSLayer()
