@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 __doc__="""
 Takes a selected anchor and places it in corresponding positions 
-across all masters based on positioning relative to zones and sides.
+across all masters based on positioning relative to shape bounds.
 """
 
-import math
 from vanilla import Window, PopUpButton, CheckBox, Button, TextBox
+from GlyphsApp import Glyphs, GSAnchor
 
 class MirrorAnchorDialog:
     """Dialog for mirror anchor settings"""
@@ -19,22 +19,22 @@ class MirrorAnchorDialog:
         y = 20
         self.w.yAxisLabel = TextBox((20, y, 100, 20), "Y-axis position:")
         self.w.yAxisPopup = PopUpButton((130, y, 150, 20), [
-            "Baseline", "X-height", "Cap-height", "Center", "Ascender", "Descender", "Proportional"
+            "Top", "Center", "Bottom"
         ])
-        self.w.yAxisPopup.set(6)  # Default to Proportional
+        self.w.yAxisPopup.set(0)  # Default to Top
         
         # X-axis positioning dropdown
         y += 30
         self.w.xAxisLabel = TextBox((20, y, 100, 20), "X-axis position:")
         self.w.xAxisPopup = PopUpButton((130, y, 150, 20), [
-            "Left", "Center", "Right", "Proportional"
+            "Left", "Center", "Right"
         ])
-        self.w.xAxisPopup.set(3)  # Default to Proportional
+        self.w.xAxisPopup.set(2)  # Default to Right
         
-        # Maintain relative distance checkbox
+        # Relative to shapes checkbox
         y += 30
-        self.w.maintainDistance = CheckBox((20, y, 260, 20), "Maintain relative distance from reference")
-        self.w.maintainDistance.set(True)
+        self.w.relativeToShapes = CheckBox((20, y, 260, 20), "Relative to shapes")
+        self.w.relativeToShapes.set(True)
         
         # Close after running checkbox
         y += 30
@@ -47,26 +47,23 @@ class MirrorAnchorDialog:
         self.w.okButton = Button((200, y, 80, 20), "OK", callback=self.okCallback)
         self.w.setDefaultButton(self.w.okButton)
         
-        # Result storage
-        self.result = None
-        
     def okCallback(self, sender):
         """Handle OK button click"""
-        y_options = ["baseline", "x-height", "cap-height", "center", "ascender", "descender", "proportional"]
-        x_options = ["left", "center", "right", "proportional"]
+        y_options = ["top", "center", "bottom"]
+        x_options = ["left", "center", "right"]
         
-        self.result = {
+        options = {
             'y_position': y_options[self.w.yAxisPopup.get()],
             'x_position': x_options[self.w.xAxisPopup.get()],
-            'maintain_distance': self.w.maintainDistance.get(),
+            'relative_to_shapes': self.w.relativeToShapes.get(),
             'close_after_running': self.w.closeAfterRunning.get()
         }
         
-        if self.result['close_after_running']:
-            self.w.close()
-        
         # Run the mirror function with the selected options
-        mirror_anchor_with_options(self.result)
+        mirror_anchor_with_options(options)
+        
+        if options['close_after_running']:
+            self.w.close()
         
     def cancelCallback(self, sender):
         """Handle Cancel button click"""
@@ -75,40 +72,7 @@ class MirrorAnchorDialog:
     def show(self):
         """Show the dialog"""
         self.w.open()
-from vanilla import Window, PopUpButton, CheckBox, Button, TextBox
 
-def get_font_zones(master):
-    """Get the key vertical zones for a master"""
-    zones = {}
-    zones['baseline'] = 0
-    
-    # Helper function to safely get a metric
-    def get_metric(metric_name, default_value):
-        try:
-            # Try to get from master first
-            value = getattr(master, metric_name, None)
-            if value is not None:
-                return value
-        except:
-            pass
-        
-        try:
-            # Try to get from font's custom parameters
-            value = master.font.customParameters[metric_name]
-            if value is not None:
-                return value
-        except:
-            pass
-        
-        # Fall back to default
-        return default_value
-    
-    zones['x-height'] = get_metric('xHeight', 500)
-    zones['cap-height'] = get_metric('capHeight', 700)
-    zones['ascender'] = get_metric('ascender', 800)
-    zones['descender'] = get_metric('descender', -200)
-    
-    return zones
 
 def get_glyph_bounds(layer):
     """Get the left and right bounds of a glyph layer"""
@@ -116,62 +80,6 @@ def get_glyph_bounds(layer):
         return layer.bounds.origin.x, layer.bounds.origin.x + layer.bounds.size.width
     return 0, layer.width
 
-def is_near_zone(y_pos, zone_value, tolerance=10):
-    """Check if a position is within tolerance of a zone"""
-    return abs(y_pos - zone_value) <= tolerance
-
-def is_near_side(x_pos, left_bound, right_bound, tolerance=10):
-    """Check if a position is within tolerance of left or right side"""
-    return abs(x_pos - left_bound) <= tolerance or abs(x_pos - right_bound) <= tolerance
-
-def is_near_middle(pos, min_val, max_val, tolerance_percent=5):
-    """Check if a position is within percentage tolerance of the middle"""
-    middle = (min_val + max_val) / 2
-    range_size = max_val - min_val
-    tolerance = range_size * (tolerance_percent / 100.0)
-    return abs(pos - middle) <= tolerance
-
-def find_nearest_node(anchor_pos, layer):
-    """Find the nearest node to the anchor position"""
-    if not layer.paths:
-        return None, None
-    
-    min_distance = float('inf')
-    nearest_node = None
-    nearest_node_info = None
-    
-    for path_index, path in enumerate(layer.paths):
-        for node_index, node in enumerate(path.nodes):
-            # Calculate distance from anchor to node
-            dx = anchor_pos.x - node.x
-            dy = anchor_pos.y - node.y
-            distance = math.sqrt(dx * dx + dy * dy)
-            
-            if distance < min_distance:
-                min_distance = distance
-                nearest_node = node
-                nearest_node_info = {
-                    'path_index': path_index,
-                    'node_index': node_index,
-                    'distance': distance,
-                    'offset_x': dx,
-                    'offset_y': dy,
-                    'node_x': node.x,
-                    'node_y': node.y
-                }
-    
-    return nearest_node, nearest_node_info
-
-def get_corresponding_node(target_layer, node_info):
-    """Get the corresponding node in the target layer"""
-    if not target_layer.paths or len(target_layer.paths) <= node_info['path_index']:
-        return None
-    
-    target_path = target_layer.paths[node_info['path_index']]
-    if len(target_path.nodes) <= node_info['node_index']:
-        return None
-    
-    return target_path.nodes[node_info['node_index']]
 
 def mirror_anchor_with_options(options):
     """Mirror anchor with user-specified options"""
@@ -209,17 +117,35 @@ def mirror_anchor_with_options(options):
     print(f"Mirroring anchor '{anchor_name}' from position ({anchor_pos.x}, {anchor_pos.y})")
     print(f"Options: {options}")
     
-    # Get reference measurements from current master
-    current_zones = get_font_zones(current_master)
+    # Get current layer bounds
     current_left, current_right = get_glyph_bounds(current_layer)
+    current_bottom = current_layer.bounds.origin.y if current_layer.bounds else 0
+    current_top = current_bottom + (current_layer.bounds.size.height if current_layer.bounds else 0)
     
-    # Calculate reference distance if maintaining relative distance
-    reference_distance = None
-    if options['maintain_distance']:
-        reference_distance = calculate_reference_distance(
-            anchor_pos, options, current_zones, current_left, current_right, current_layer.width, current_layer
-        )
-        print(f"Reference distance: {reference_distance}")
+    # Calculate the offset from the reference point in the current layer
+    offset_x = 0
+    offset_y = 0
+    
+    if options['relative_to_shapes']:
+        # Calculate offset from the specified reference point on the shape bounds
+        if options['x_position'] == 'left':
+            ref_x = current_left
+        elif options['x_position'] == 'right':
+            ref_x = current_right
+        else:  # center
+            ref_x = (current_left + current_right) / 2
+        
+        if options['y_position'] == 'top':
+            ref_y = current_top
+        elif options['y_position'] == 'bottom':
+            ref_y = current_bottom
+        else:  # center
+            ref_y = (current_top + current_bottom) / 2
+        
+        # Store offsets from reference point
+        offset_x = anchor_pos.x - ref_x
+        offset_y = anchor_pos.y - ref_y
+        print(f"Reference point: ({ref_x}, {ref_y}), Offset: ({offset_x}, {offset_y})")
     
     # Apply to all other masters
     for master in font.masters:
@@ -229,11 +155,57 @@ def mirror_anchor_with_options(options):
         target_layer = current_glyph.layers[master.id]
         if not target_layer:
             continue
+        
+        # Get target layer bounds
+        target_left, target_right = get_glyph_bounds(target_layer)
+        target_bottom = target_layer.bounds.origin.y if target_layer.bounds else 0
+        target_top = target_bottom + (target_layer.bounds.size.height if target_layer.bounds else 0)
+        
+        if options['relative_to_shapes']:
+            # Calculate new reference point in target layer
+            if options['x_position'] == 'left':
+                new_ref_x = target_left
+            elif options['x_position'] == 'right':
+                new_ref_x = target_right
+            else:  # center
+                new_ref_x = (target_left + target_right) / 2
             
-        # Calculate new position based on options
-        new_pos = calculate_new_position_with_options(
-            options, master, target_layer, anchor_pos, reference_distance
-        )
+            if options['y_position'] == 'top':
+                new_ref_y = target_top
+            elif options['y_position'] == 'bottom':
+                new_ref_y = target_bottom
+            else:  # center
+                new_ref_y = (target_top + target_bottom) / 2
+            
+            # Apply offset from reference point
+            new_x = new_ref_x + offset_x
+            new_y = new_ref_y + offset_y
+        else:
+            # Just use the specified position directly on the shape bounds
+            if options['x_position'] == 'left':
+                new_x = target_left
+            elif options['x_position'] == 'right':
+                new_x = target_right
+            else:  # center
+                new_x = (target_left + target_right) / 2
+            
+            if options['y_position'] == 'top':
+                new_y = target_top
+            elif options['y_position'] == 'bottom':
+                new_y = target_bottom
+            else:  # center
+                new_y = (target_top + target_bottom) / 2
+        
+        # Create new position
+        try:
+            from Foundation import NSPoint
+            new_pos = NSPoint(new_x, new_y)
+        except ImportError:
+            class Point:
+                def __init__(self, x, y):
+                    self.x = x
+                    self.y = y
+            new_pos = Point(new_x, new_y)
         
         # Find or create anchor in target layer
         target_anchor = None
@@ -250,395 +222,6 @@ def mirror_anchor_with_options(options):
         target_anchor.position = new_pos
         print(f"Placed anchor in {master.name} at ({new_pos.x}, {new_pos.y})")
 
-def calculate_reference_distance(anchor_pos, options, zones, left_bound, right_bound, glyph_width, current_layer):
-    """Calculate the reference distance from the anchor to the specified reference point"""
-    
-    # If both axes are proportional and maintain distance is enabled, use node-based calculation
-    if options['y_position'] == 'proportional' and options['x_position'] == 'proportional':
-        nearest_node, node_info = find_nearest_node(anchor_pos, current_layer)
-        if nearest_node and node_info:
-            print(f"Using node-based positioning: nearest node at path {node_info['path_index']}, node {node_info['node_index']}")
-            print(f"Distance from node: {node_info['distance']:.1f} units")
-            return {
-                'type': 'node_based',
-                'node_info': node_info,
-                'offset_x': node_info['offset_x'],
-                'offset_y': node_info['offset_y']
-            }
-    
-    # Fall back to standard reference point calculation
-    # Calculate Y distance
-    y_ref = get_y_reference_position(options['y_position'], zones)
-    y_distance = anchor_pos.y - y_ref
-    
-    # Calculate X distance  
-    x_ref = get_x_reference_position(options['x_position'], left_bound, right_bound, glyph_width)
-    x_distance = anchor_pos.x - x_ref
-    
-    return {
-        'type': 'reference_based',
-        'x': x_distance, 
-        'y': y_distance
-    }
-
-def get_y_reference_position(y_position, zones):
-    """Get the Y coordinate for the specified reference position"""
-    position_map = {
-        'baseline': zones['baseline'],
-        'x-height': zones['x-height'], 
-        'cap-height': zones['cap-height'],
-        'center': (zones['cap-height'] + zones['baseline']) / 2,
-        'ascender': zones['ascender'],
-        'descender': zones['descender']
-    }
-    return position_map.get(y_position, zones['baseline'])
-
-def get_x_reference_position(x_position, left_bound, right_bound, glyph_width):
-    """Get the X coordinate for the specified reference position"""
-    if x_position == 'left':
-        return left_bound
-    elif x_position == 'right':
-        return right_bound
-    elif x_position == 'center':
-        return (left_bound + right_bound) / 2
-    else:  # proportional - use glyph center
-        return glyph_width / 2
-
-def calculate_new_position_with_options(options, target_master, target_layer, original_pos, reference_distance):
-    """Calculate new anchor position based on user options"""
-    
-    target_zones = get_font_zones(target_master)
-    target_left, target_right = get_glyph_bounds(target_layer)
-    
-    if options['maintain_distance'] and reference_distance:
-        if reference_distance.get('type') == 'node_based':
-            # Use node-based positioning
-            node_info = reference_distance['node_info']
-            corresponding_node = get_corresponding_node(target_layer, node_info)
-            
-            if corresponding_node:
-                # Position anchor relative to the corresponding node
-                new_x = corresponding_node.x - reference_distance['offset_x']
-                new_y = corresponding_node.y - reference_distance['offset_y']
-                print(f"  Node-based positioning: using node at ({corresponding_node.x}, {corresponding_node.y})")
-            else:
-                print(f"  Warning: Could not find corresponding node, falling back to proportional")
-                # Fall back to proportional positioning
-                new_x, new_y = calculate_proportional_position(original_pos, target_zones, target_left, target_right)
-        else:
-            # Use reference point based positioning
-            y_ref = get_y_reference_position(options['y_position'], target_zones)
-            x_ref = get_x_reference_position(options['x_position'], target_left, target_right, target_layer.width)
-            
-            new_y = y_ref + reference_distance['y']
-            new_x = x_ref + reference_distance['x']
-    else:
-        # Direct positioning without maintaining distance
-        if options['y_position'] == 'proportional':
-            # Use proportional Y positioning
-            ratio = original_pos.y / get_font_zones(target_master)['cap-height'] if get_font_zones(target_master)['cap-height'] != 0 else 0
-            new_y = target_zones['cap-height'] * ratio
-        else:
-            new_y = get_y_reference_position(options['y_position'], target_zones)
-        
-        if options['x_position'] == 'proportional':
-            # Use proportional X positioning
-            ratio = 0.5  # Default to center for proportional
-            new_x = target_left + (target_right - target_left) * ratio
-        else:
-            new_x = get_x_reference_position(options['x_position'], target_left, target_right, target_layer.width)
-    
-    # Create a new point using the correct Glyphs constructor
-    try:
-        # Try NSPoint first (available in Glyphs environment)
-        from Foundation import NSPoint
-        return NSPoint(new_x, new_y)
-    except ImportError:
-        # Fallback: create a simple point object or use tuple
-        class Point:
-            def __init__(self, x, y):
-                self.x = x
-                self.y = y
-        return Point(new_x, new_y)
-
-def calculate_proportional_position(original_pos, target_zones, target_left, target_right):
-    """Calculate proportional position for fallback scenarios"""
-    # Simple proportional positioning based on cap-height ratio
-    y_ratio = original_pos.y / target_zones['cap-height'] if target_zones['cap-height'] != 0 else 0
-    new_y = target_zones['cap-height'] * y_ratio
-    
-    # Center horizontally for X proportional
-    new_x = (target_left + target_right) / 2
-    
-    return new_x, new_y
-def mirror_anchor():
-    """Main function to mirror the selected anchor across masters (original function)"""
-    
-    # Check if we have a font open
-    font = Glyphs.font
-    if not font:
-        print("No font open")
-        return
-    
-    # Check if we have a glyph selected
-    if not font.selectedLayers:
-        print("No glyph selected")
-        return
-    
-    current_layer = font.selectedLayers[0]
-    current_glyph = current_layer.parent
-    current_master = current_layer.associatedFontMaster
-    
-    # Check if we have an anchor selected
-    selection = current_layer.selection
-    selected_anchor = None
-    
-    for item in selection:
-        if item.__class__.__name__ == "GSAnchor":
-            selected_anchor = item
-            break
-    
-    if not selected_anchor:
-        print("No anchor selected")
-        return
-    
-    anchor_name = selected_anchor.name
-    anchor_pos = selected_anchor.position
-    print(f"Mirroring anchor '{anchor_name}' from position ({anchor_pos.x}, {anchor_pos.y})")
-    
-    # Get reference measurements from current master
-    current_zones = get_font_zones(current_master)
-    current_left, current_right = get_glyph_bounds(current_layer)
-    current_width = current_right - current_left
-    
-    # Analyze anchor position relative to zones and bounds
-    y_analysis = analyze_y_position(anchor_pos.y, current_zones)
-    x_analysis = analyze_x_position(anchor_pos.x, current_left, current_right, current_layer.width)
-    
-    print(f"Y-axis analysis: {y_analysis}")
-    print(f"X-axis analysis: {x_analysis}")
-    
-    # Apply to all other masters
-    for master in font.masters:
-        if master == current_master:
-            continue
-            
-        target_layer = current_glyph.layers[master.id]
-        if not target_layer:
-            continue
-            
-        # Calculate new position based on analysis
-        new_pos = calculate_new_position(
-            x_analysis, y_analysis, 
-            master, target_layer, 
-            anchor_pos
-        )
-        
-        # Find or create anchor in target layer
-        target_anchor = None
-        for anchor in target_layer.anchors:
-            if anchor.name == anchor_name:
-                target_anchor = anchor
-                break
-        
-        if not target_anchor:
-            target_anchor = GSAnchor()
-            target_anchor.name = anchor_name
-            target_layer.anchors.append(target_anchor)
-        
-        target_anchor.position = new_pos
-        print(f"Placed anchor in {master.name} at ({new_pos.x}, {new_pos.y})")
-    
-    # Check if we have a font open
-    font = Glyphs.font
-    if not font:
-        print("No font open")
-        return
-    
-    # Check if we have a glyph selected
-    if not font.selectedLayers:
-        print("No glyph selected")
-        return
-    
-    current_layer = font.selectedLayers[0]
-    current_glyph = current_layer.parent
-    current_master = current_layer.associatedFontMaster
-    
-    # Check if we have an anchor selected
-    selection = current_layer.selection
-    selected_anchor = None
-    
-    for item in selection:
-        if item.__class__.__name__ == "GSAnchor":
-            selected_anchor = item
-            break
-    
-    if not selected_anchor:
-        print("No anchor selected")
-        return
-    
-    anchor_name = selected_anchor.name
-    anchor_pos = selected_anchor.position
-    print(f"Mirroring anchor '{anchor_name}' from position ({anchor_pos.x}, {anchor_pos.y})")
-    
-    # Get reference measurements from current master
-    current_zones = get_font_zones(current_master)
-    current_left, current_right = get_glyph_bounds(current_layer)
-    current_width = current_right - current_left
-    
-    # Analyze anchor position relative to zones and bounds
-    y_analysis = analyze_y_position(anchor_pos.y, current_zones)
-    x_analysis = analyze_x_position(anchor_pos.x, current_left, current_right, current_layer.width)
-    
-    print(f"Y-axis analysis: {y_analysis}")
-    print(f"X-axis analysis: {x_analysis}")
-    
-    # Apply to all other masters
-    for master in font.masters:
-        if master == current_master:
-            continue
-            
-        target_layer = current_glyph.layers[master.id]
-        if not target_layer:
-            continue
-            
-        # Calculate new position based on analysis
-        new_pos = calculate_new_position(
-            x_analysis, y_analysis, 
-            master, target_layer, 
-            anchor_pos
-        )
-        
-        # Find or create anchor in target layer
-        target_anchor = None
-        for anchor in target_layer.anchors:
-            if anchor.name == anchor_name:
-                target_anchor = anchor
-                break
-        
-        if not target_anchor:
-            target_anchor = GSAnchor()
-            target_anchor.name = anchor_name
-            target_layer.anchors.append(target_anchor)
-        
-        target_anchor.position = new_pos
-        print(f"Placed anchor in {master.name} at ({new_pos.x}, {new_pos.y})")
-
-def analyze_y_position(y_pos, zones):
-    """Analyze vertical position relative to font zones"""
-    analysis = {}
-    
-    # Check proximity to each zone
-    for zone_name, zone_value in zones.items():
-        if is_near_zone(y_pos, zone_value):
-            analysis['type'] = 'zone_relative'
-            analysis['zone'] = zone_name
-            analysis['offset'] = y_pos - zone_value
-            return analysis
-    
-    # Check if it's in the middle between major zones
-    cap_baseline_middle = (zones['cap-height'] + zones['baseline']) / 2
-    if is_near_middle(y_pos, zones['baseline'], zones['cap-height']):
-        analysis['type'] = 'middle'
-        analysis['zone_pair'] = ('baseline', 'cap-height')
-        return analysis
-    
-    xheight_baseline_middle = (zones['x-height'] + zones['baseline']) / 2
-    if is_near_middle(y_pos, zones['baseline'], zones['x-height']):
-        analysis['type'] = 'middle'
-        analysis['zone_pair'] = ('baseline', 'x-height')
-        return analysis
-    
-    # Default: use proportional positioning
-    analysis['type'] = 'proportional'
-    analysis['baseline_ratio'] = y_pos / zones['cap-height'] if zones['cap-height'] != 0 else 0
-    return analysis
-
-def analyze_x_position(x_pos, left_bound, right_bound, glyph_width):
-    """Analyze horizontal position relative to glyph bounds"""
-    analysis = {}
-    
-    # Check proximity to sides
-    if is_near_side(x_pos, left_bound, right_bound):
-        if abs(x_pos - left_bound) <= abs(x_pos - right_bound):
-            analysis['type'] = 'side_relative'
-            analysis['side'] = 'left'
-            analysis['offset'] = x_pos - left_bound
-        else:
-            analysis['type'] = 'side_relative'
-            analysis['side'] = 'right'
-            analysis['offset'] = x_pos - right_bound
-        return analysis
-    
-    # Check if it's in the middle horizontally
-    if is_near_middle(x_pos, left_bound, right_bound):
-        analysis['type'] = 'middle'
-        return analysis
-    
-    # Check proximity to glyph width boundaries (for spacing)
-    if is_near_side(x_pos, 0, glyph_width):
-        if abs(x_pos - 0) <= abs(x_pos - glyph_width):
-            analysis['type'] = 'width_relative'
-            analysis['side'] = 'left'
-            analysis['offset'] = x_pos
-        else:
-            analysis['type'] = 'width_relative'
-            analysis['side'] = 'right'
-            analysis['offset'] = x_pos - glyph_width
-        return analysis
-    
-    # Default: use proportional positioning
-    analysis['type'] = 'proportional'
-    if right_bound != left_bound:
-        analysis['ratio'] = (x_pos - left_bound) / (right_bound - left_bound)
-    else:
-        analysis['ratio'] = 0.5
-    return analysis
-
-def calculate_new_position(x_analysis, y_analysis, target_master, target_layer, original_pos):
-    """Calculate new anchor position based on analysis"""
-    
-    # Calculate Y position
-    target_zones = get_font_zones(target_master)
-    
-    if y_analysis['type'] == 'zone_relative':
-        new_y = target_zones[y_analysis['zone']] + y_analysis['offset']
-    elif y_analysis['type'] == 'middle':
-        zone1, zone2 = y_analysis['zone_pair']
-        new_y = (target_zones[zone1] + target_zones[zone2]) / 2
-    else:  # proportional
-        new_y = target_zones['cap-height'] * y_analysis['baseline_ratio']
-    
-    # Calculate X position
-    target_left, target_right = get_glyph_bounds(target_layer)
-    
-    if x_analysis['type'] == 'side_relative':
-        if x_analysis['side'] == 'left':
-            new_x = target_left + x_analysis['offset']
-        else:
-            new_x = target_right + x_analysis['offset']
-    elif x_analysis['type'] == 'width_relative':
-        if x_analysis['side'] == 'left':
-            new_x = x_analysis['offset']
-        else:
-            new_x = target_layer.width + x_analysis['offset']
-    elif x_analysis['type'] == 'middle':
-        new_x = (target_left + target_right) / 2
-    else:  # proportional
-        new_x = target_left + (target_right - target_left) * x_analysis['ratio']
-    
-    # Create a new point using the correct Glyphs constructor
-    try:
-        # Try NSPoint first (available in Glyphs environment)
-        from Foundation import NSPoint
-        return NSPoint(new_x, new_y)
-    except ImportError:
-        # Fallback: create a simple point object or use tuple
-        class Point:
-            def __init__(self, x, y):
-                self.x = x
-                self.y = y
-        return Point(new_x, new_y)
 
 # Run the script
 if __name__ == "__main__":
